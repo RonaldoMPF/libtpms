@@ -4923,6 +4923,7 @@ PERSISTENT_ALL_Unmarshal(BYTE **buffer, INT32 *size)
     /* Set the runtime profile to the default.
      * If a profile is part of the state activate it at the end.
      */
+    fprintf(stderr, "Setting NULL profile before unmarshalling!\n");
     rc = RuntimeProfileSet(&g_RuntimeProfile, NULL);
 
     if (rc == TPM_RC_SUCCESS) {
@@ -4940,6 +4941,14 @@ PERSISTENT_ALL_Unmarshal(BYTE **buffer, INT32 *size)
             /* allow all algorithms to be unmarshalled */
             rc = RuntimeAlgorithmSetProfile(&g_RuntimeProfile.RuntimeAlgorithm, NULL);
         }
+#if 1
+        if (rc == TPM_RC_SUCCESS) {
+            rc = RuntimeProfileFormatJSON(&g_RuntimeProfile);
+        }
+        if (rc == TPM_RC_SUCCESS) {
+            fprintf(stderr, "Temp profile while unmarshalling: %s\n", RuntimeProfileGetJSON(&g_RuntimeProfile));
+        }
+#endif
     }
     if (rc == TPM_RC_SUCCESS) {
         rc = PACompileConstants_Unmarshal(buffer, size);
@@ -4995,7 +5004,13 @@ skip_future_versions:
         NvWrite(NV_STATE_CLEAR_DATA, sizeof(scd), &scd);
         NvWrite(NV_INDEX_RAM_DATA, sizeof(indexOrderlyRam), indexOrderlyRam);
         /* Activate a profile read from the state of the TPM 2 */
+        fprintf(stderr, "profile from state: %s\n", profileJSON);
         rc = RuntimeProfileSet(&g_RuntimeProfile, profileJSON);
+#if 1
+        if (rc == TPM_RC_SUCCESS) {
+            fprintf(stderr, "Final profile after unmarshalling: %s\n", RuntimeProfileGetJSON(&g_RuntimeProfile));
+        }
+#endif
     }
 
     free(profileJSON);
