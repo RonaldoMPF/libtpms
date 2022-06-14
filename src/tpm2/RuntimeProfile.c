@@ -195,7 +195,7 @@ RuntimeProfileGetNameFromJSON(
 			      char       **name
 			      )
 {
-    const char *regex = "^\\{[[:space:]]*\"Name\"[[:space:]]*:[[:space:]]*\"([^\"]+)\".*";
+    const char *regex = "^\\{[[:space:]]*\"name\"[[:space:]]*:[[:space:]]*\"([^\"]+)\".*";
 
     return RuntimeProfileGetFromJSON(json, regex, name);
 }
@@ -206,7 +206,7 @@ GetStateFormatLevelFromJSON(
 			    unsigned int  *stateFormatLevel
 			    )
 {
-    const char *regex = ".*,[[:space:]]*\"StateFormatLevel\"[[:space:]]*:[[:space:]]*\"([^\"]+)\"";
+    const char *regex = ".*,[[:space:]]*\"stateFormatLevel\"[[:space:]]*:[[:space:]]*\"([^\"]+)\"";
     char *str = NULL;
     unsigned long v;
     TPM_RC retVal;
@@ -237,7 +237,7 @@ GetAlgorithmsProfileFromJSON(
 			     char       **algorithmsProfile
 			     )
 {
-    const char *regex = ".*,[[:space:]]*\"Algorithms\"[[:space:]]*:[[:space:]]*\"([^\"]+)\"";
+    const char *regex = ".*,[[:space:]]*\"algorithms\"[[:space:]]*:[[:space:]]*\"([^\"]+)\"";
     TPM_RC retVal;
 
     retVal = RuntimeProfileGetFromJSON(json, regex, algorithmsProfile);
@@ -307,13 +307,13 @@ RuntimeProfileFormat(char **json, const char *profileName, const char *algorithm
 	return TPM_RC_FAILURE;
 
     n = asprintf(&ret,
-                 "{\"Name\":\"%s\","
-                  "\"StateFormatLevel\":%d",
+                 "{\"name\":\"%s\","
+                  "\"stateFormatLevel\":%d",
                   profileName, rp->stateFormatLevel);
     if (n < 0)
 	return TPM_RC_MEMORY;
     if (rp->commandProfile) {
-	n = asprintf(&nret, "%s,\"Commands\":\"%s\"", ret, rp->commandProfile);
+	n = asprintf(&nret, "%s,\"commands\":\"%s\"", ret, rp->commandProfile);
 	free(ret);
 	if (n < 0)
 	    return TPM_RC_MEMORY;
@@ -321,7 +321,7 @@ RuntimeProfileFormat(char **json, const char *profileName, const char *algorithm
 	ret = nret;
     }
     if (algorithmsProfile) {
-	n = asprintf(&nret, "%s,\"Algorithms\":\"%s\"", ret, algorithmsProfile);
+	n = asprintf(&nret, "%s,\"algorithms\":\"%s\"", ret, algorithmsProfile);
 	free(ret);
 	if (n < 0)
 	    return TPM_RC_MEMORY;
@@ -374,7 +374,10 @@ CheckStateFormatLevel(
 	if (*stateFormatLevel > s_currentStateFormatLevel)
 	    retVal = TPM_RC_FAILURE;
 	else
-	    /* if the default profile doesn't have a level put it to '1' */
+	    /* If the default profile doesn't have a level put it to '1',
+	     * which allows it to be parsed in the format of the state when it
+	     * didn't have a profile at all.
+	     */
 	    *stateFormatLevel = 1;
     } else {
         /* If user passed JSON and it didn't contain a stateFormatLevel take
